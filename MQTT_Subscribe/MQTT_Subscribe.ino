@@ -15,7 +15,7 @@ const char* password = "Raspberry";
 
 // Update these with values suitable for your network.
 //IPAddress server(192, 168, 32, 109);
-char* server = "192.168.32.113";
+char* server = "192.168.42.1";
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
