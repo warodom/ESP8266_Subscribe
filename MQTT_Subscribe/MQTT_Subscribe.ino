@@ -16,6 +16,8 @@
 
 const char* ssid = "Pi_AP";
 const char* password = "Raspberry"; 
+//const char* ssid = "worktong514";
+//const char* password = "1234567890"; 
 //const char *ssid =	"xxxxxxxx";		// cannot be longer than 32 characters!
 //const char *pass =	"yyyyyyyy";		//
 
@@ -53,7 +55,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   */
   
-  for(i = 0; i < (sizeof(msgString)-4); i++) {
+  for(i = 0; i < (sizeof(msgString)-1); i++) {
     if(msgString[i] != ',') {
       switch(select_color) {
         case 0: red_s = red_s + msgString[i]; break;
