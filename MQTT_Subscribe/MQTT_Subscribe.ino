@@ -16,8 +16,6 @@
 
 const char* ssid = "Pi_AP";
 const char* password = "Raspberry"; 
-//const char* ssid = "worktong514";
-//const char* password = "1234567890"; 
 //const char *ssid =	"xxxxxxxx";		// cannot be longer than 32 characters!
 //const char *pass =	"yyyyyyyy";		//
 
@@ -28,6 +26,7 @@ char* server = "192.168.42.1";
 unsigned int temp_count;
 char temp[10];
 String red_s,green_s,blue_s;
+char R_Set,G_Set,B_Set,PWM_Count;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
@@ -66,9 +65,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
     else
       select_color++;
   }
-  Serial.println("Red : " + red_s);
-  Serial.println("Green : " + green_s);
-  Serial.println("Blue : " + blue_s);
+  //Serial.println("Red : " + red_s);
+  //Serial.println("Green : " + green_s);
+  //Serial.println("Blue : " + blue_s);
+  R_Set = red_s.toInt();
+  G_Set = green_s.toInt();
+  B_Set  = blue_s.toInt();
+  Serial.print("Red : ");
+  Serial.println(int(R_Set));
+  Serial.print("Green : ");
+  Serial.println(int(G_Set));
+  Serial.print("Blue : ");
+  Serial.println(int(B_Set));
   red_s = ""; green_s = ""; blue_s = "";
 } 
 //void callback(const MQTT::Publish& pub) {
@@ -139,5 +147,13 @@ void loop()
   }
   else temp_count++;
   */
+  if(PWM_Count < R_Set) digitalWrite(12, LOW);
+  else digitalWrite(12, HIGH);
+  if(PWM_Count < G_Set) digitalWrite(14, LOW);
+  else digitalWrite(14, HIGH);
+  if(PWM_Count < B_Set) digitalWrite(13, LOW);
+  else digitalWrite(13, HIGH);
+  PWM_Count++;
+  //if(PWM_Count > 255) PWM_Count = 0;
   client.loop();
 }
