@@ -14,6 +14,11 @@
 //OneWire oneWire(ONE_WIRE_BUS);
 //DallasTemperature sensors(&oneWire);
 
+#define R_LED   13
+#define G_LED   12
+#define B_LED   14
+#define Dim_LED 16
+//#define CommonA
 const char* ssid = "Pi_AP";
 const char* password = "Raspberry"; 
 //const char *ssid =	"xxxxxxxx";		// cannot be longer than 32 characters!
@@ -25,8 +30,8 @@ char* server = "192.168.42.1";
 
 unsigned int temp_count;
 char temp[10];
-String red_s,green_s,blue_s;
-char R_Set,G_Set,B_Set,PWM_Count;
+String red_s,green_s,blue_s,dim_s;
+char R_Set,G_Set,B_Set,Dim_Set,PWM_Count;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
@@ -53,31 +58,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(16, HIGH);
   }
   */
-  
-  for(i = 0; i < (sizeof(msgString)-1); i++) {
-    if(msgString[i] != ',') {
-      switch(select_color) {
-        case 0: red_s = red_s + msgString[i]; break;
-        case 1: green_s = green_s + msgString[i]; break;
-        case 2: blue_s = blue_s + msgString[i]; break;
+  if(String(topic) == "color") {
+    for(i = 0; i < (sizeof(msgString)-1); i++) {
+      if(msgString[i] != ',') {
+        switch(select_color) {
+          case 0: red_s = red_s + msgString[i]; break;
+          case 1: green_s = green_s + msgString[i]; break;
+          case 2: blue_s = blue_s + msgString[i]; break;
+        }
       }
+      else select_color++;
     }
-    else
-      select_color++;
+    R_Set = red_s.toInt(); G_Set = green_s.toInt(); B_Set  = blue_s.toInt();
+    Serial.print("Red : "); Serial.println(int(R_Set));
+    Serial.print("Green : "); Serial.println(int(G_Set));
+    Serial.print("Blue : "); Serial.println(int(B_Set));
+    red_s = ""; green_s = ""; blue_s = "";
   }
-  //Serial.println("Red : " + red_s);
-  //Serial.println("Green : " + green_s);
-  //Serial.println("Blue : " + blue_s);
-  R_Set = red_s.toInt();
-  G_Set = green_s.toInt();
-  B_Set  = blue_s.toInt();
-  Serial.print("Red : ");
-  Serial.println(int(R_Set));
-  Serial.print("Green : ");
-  Serial.println(int(G_Set));
-  Serial.print("Blue : ");
-  Serial.println(int(B_Set));
-  red_s = ""; green_s = ""; blue_s = "";
+  else if(String(topic) == "dimmer") {
+    for(i = 0; i < (sizeof(msgString)-1); i++) {
+          dim_s = dim_s + msgString[i];
+    }
+    Dim_Set = dim_s.toInt();
+    Serial.print("Dimmer : "); Serial.println(int(Dim_Set));
+    dim_s = ""; 
+  }
 } 
 //void callback(const MQTT::Publish& pub) {
 //  Serial.print(pub.topic());
@@ -92,10 +97,22 @@ PubSubClient client(server, 1883, callback, wifiClient);
 void setup()
 {
   // Setup console
-  pinMode(16, OUTPUT);
-  pinMode(12, OUTPUT); digitalWrite(12, HIGH);
-  pinMode(13, OUTPUT); digitalWrite(13, HIGH);
-  pinMode(14, OUTPUT); digitalWrite(14, HIGH);
+  pinMode(Dim_LED, OUTPUT); 
+  pinMode(R_LED, OUTPUT); 
+  pinMode(G_LED, OUTPUT); 
+  pinMode(B_LED, OUTPUT); 
+
+  #ifdef CommonA
+    digitalWrite(Dim_LED, HIGH);
+    digitalWrite(R_LED, HIGH);
+    digitalWrite(G_LED, HIGH);
+    digitalWrite(B_LED, HIGH);
+  #else
+    digitalWrite(Dim_LED, LOW);
+    digitalWrite(R_LED, LOW);
+    digitalWrite(G_LED, LOW);
+    digitalWrite(B_LED, LOW);
+  #endif
   
   Serial.begin(115200);
   //sensors.begin();
@@ -122,6 +139,7 @@ void setup()
   if (client.connect("192.168.42.1")) {
     //client.subscribe("home/light");
     client.subscribe("color");
+    client.subscribe("dimmer");
   }
   /*
   sensors.requestTemperatures();
@@ -147,12 +165,25 @@ void loop()
   }
   else temp_count++;
   */
-  if(PWM_Count < R_Set) digitalWrite(12, LOW);
-  else digitalWrite(12, HIGH);
-  if(PWM_Count < G_Set) digitalWrite(14, LOW);
-  else digitalWrite(14, HIGH);
-  if(PWM_Count < B_Set) digitalWrite(13, LOW);
-  else digitalWrite(13, HIGH);
+  #ifdef CommonA
+    if(PWM_Count < R_Set) digitalWrite(R_LED, LOW);
+    else digitalWrite(R_LED, HIGH);
+    if(PWM_Count < G_Set) digitalWrite(G_LED, LOW);
+    else digitalWrite(G_LED, HIGH);
+    if(PWM_Count < B_Set) digitalWrite(B_LED, LOW);
+    else digitalWrite(B_LED, HIGH);
+    if(PWM_Count < Dim_Set) digitalWrite(Dim_LED, LOW);
+    else digitalWrite(Dim_LED, HIGH);
+  #else
+    if(PWM_Count < R_Set) digitalWrite(R_LED, HIGH);
+    else digitalWrite(R_LED, LOW);
+    if(PWM_Count < G_Set) digitalWrite(G_LED, HIGH);
+    else digitalWrite(G_LED, LOW);
+    if(PWM_Count < B_Set) digitalWrite(B_LED, HIGH);
+    else digitalWrite(B_LED, LOW);
+    if(PWM_Count < Dim_Set) digitalWrite(Dim_LED, HIGH);
+    else digitalWrite(Dim_LED, LOW);
+  #endif
   PWM_Count++;
   //if(PWM_Count > 255) PWM_Count = 0;
   client.loop();
